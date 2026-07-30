@@ -1,0 +1,95 @@
+# ==========================
+# FastAPI
+# ==========================
+fastapi
+uvicorn[standard]
+python-multipart
+aiofiles
+python-dotenv
+pydantic
+pydantic-settings
+
+# ==========================
+# Database
+# ==========================
+sqlalchemy
+aiosqlite
+mysql-connector-python
+pymysql
+
+# ==========================
+# LangChain & LangGraph
+# ==========================
+langchain
+langchain-community
+langchain-core
+langgraph
+langsmith
+
+# ==========================
+# LLMs
+# ==========================
+openai
+google-generativeai
+tiktoken
+
+# ==========================
+# Vector Databases
+# ==========================
+qdrant-client
+faiss-cpu
+chromadb
+
+# ==========================
+# Embeddings
+# ==========================
+sentence-transformers
+transformers
+torch
+torchvision
+accelerate
+
+# ==========================
+# PDF Processing
+# ==========================
+pymupdf
+pdfplumber
+pypdf
+
+# ==========================
+# Image Processing
+# ==========================
+opencv-python
+Pillow
+
+# ==========================
+# Data Science
+# ==========================
+numpy
+pandas
+scikit-learn
+scipy
+
+# ==========================
+# HTTP
+# ==========================
+requests
+httpx
+
+# ==========================
+# Streamlit
+# ==========================
+streamlit
+
+# ==========================
+# Utilities
+# ==========================
+rich
+tqdm
+loguru
+
+# ==========================
+# Testing
+# ==========================
+pytest
+pytest-asyncio
