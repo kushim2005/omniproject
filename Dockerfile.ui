@@ -1,0 +1,20 @@
+FROM python:3.11-slim AS base
+
+WORKDIR /app
+
+# System dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Streamlit and Requests
+RUN pip install --no-cache-dir streamlit==1.36.0 requests==2.32.3
+
+# Copy the UI code
+COPY ./ui /app/ui
+
+EXPOSE 8501
+
+HEALTHCHECK CMD curl --fail http://localhost:8501/_stcore/health
+
+ENTRYPOINT ["streamlit", "run", "ui/app.py", "--server.port=8501", "--server.address=0.0.0.0"]
