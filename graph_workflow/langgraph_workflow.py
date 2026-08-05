@@ -7,6 +7,7 @@
 from langgraph.graph import StateGraph, END
 from .state import GraphState
 from .self_rag_graders import SelfRAGGraders
+from .query_rewriter import QueryRewriter
 
 # Initialize Graders
 graders = SelfRAGGraders()
@@ -98,16 +99,19 @@ def generate_answer_node(state: GraphState):
 
 def query_rewriter_node(state: GraphState):
     """
-    [MEMBER 2 PLACEHOLDER]
-    Rewrites query to optimize retrieval in case of low document relevance.
+    [MEMBER 2 IMPLEMENTED]
+    Rewrites query to optimize retrieval in case of low document relevance or utility.
     """
     current_query = state["question"]
     loop_count = state.get("loop_count", 0) + 1
-    thoughts = [f"🔄 Query Rewriter [M2]: Loop Count = {loop_count}. Optimizing query syntax..."]
     
-    # Simulating simple keyword refinement
-    new_query = f"reinforcement learning theory and applications"
-    thoughts.append(f"🔄 Query Rewriter [M2]: Rewrote query to: '{new_query}'")
+    rewriter = QueryRewriter()
+    new_query = rewriter.rewrite_query(current_query)
+    
+    thoughts = [
+        f"🔄 Query Rewriter [M2]: Loop Count = {loop_count}.",
+        f"🔄 Query Rewriter [M2]: Rewrote query '{current_query}' -> '{new_query}'"
+    ]
     
     return {"question": new_query, "loop_count": loop_count, "thought_process": thoughts}
 
