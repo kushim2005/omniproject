@@ -1,0 +1,14 @@
+models:
+  - type: main
+    engine: openai
+    model: gpt-4o-mini
+
+rails:
+  input:
+    flows:
+      - check jailbreak
+      - check harmful input
+      - check off topic
+  output:
+    flows:
+      - check unsafe output
