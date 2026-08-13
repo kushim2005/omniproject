@@ -8,6 +8,7 @@ from langgraph.graph import StateGraph, END
 from .state import GraphState
 from .self_rag_graders import SelfRAGGraders
 from .query_rewriter import QueryRewriter
+from .self_correction import SelfCorrector
 
 # Initialize Graders
 graders = SelfRAGGraders()
@@ -118,11 +119,21 @@ def query_rewriter_node(state: GraphState):
 
 def self_correct_node(state: GraphState):
     """
-    [MEMBER 3 PLACEHOLDER]
+    [MEMBER 3 IMPLEMENTED]
     Corrects hallucinations or answers lacking utility.
     """
-    thoughts = ["🛠️ Self-Correction [M3]: Adjusting generation criteria to remove hallucinations..."]
-    return {"thought_process": thoughts}
+    question = state["question"]
+    current_response = state["response"]
+    facts = [d["text"] for d in state.get("filtered_documents", [])]
+    
+    corrector = SelfCorrector()
+    corrected_response = corrector.correct_answer(question, facts, current_response)
+    
+    thoughts = [
+        "🛠️ Self-Correction [M3]: Detected hallucination/utility error in response.",
+        f"🛠️ Self-Correction [M3]: Corrected response grounded strictly in document facts."
+    ]
+    return {"response": corrected_response, "thought_process": thoughts}
 
 
 # ─── 4. CONDITIONAL ROUTING PATHWAYS (Member 1 - Ravi) ────────
