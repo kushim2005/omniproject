@@ -1,7 +1,7 @@
 # ============================================================
-# OmniBrain — Week 3
-# Member 1: Ravi
-# Task: Self-RAG Logic (State Machine & Routing)
+# OmniBrain — Week 3 & Week 4
+# Member 1 (W3): Ravi — Self-RAG Logic
+# Member 1 (W4): Vasu Sree — Langfuse Observability Integration
 # ============================================================
 
 from langgraph.graph import StateGraph, END
@@ -9,6 +9,7 @@ from .state import GraphState
 from .self_rag_graders import SelfRAGGraders
 from .query_rewriter import QueryRewriter
 from .self_correction import SelfCorrector
+from observability.langfuse_client import langfuse
 
 # Initialize Graders
 graders = SelfRAGGraders()
@@ -17,43 +18,57 @@ graders = SelfRAGGraders()
 
 def supervisor_node(state: GraphState):
     question = state["question"].lower()
-    thoughts = ["🕵️‍♂️ Supervisor: Analyzing query intent..."]
-    
-    # Reset or initialize state elements
+    thoughts = ["Supervisor: Analyzing query intent..."]
     loop_count = state.get("loop_count", 0)
-    
+    trace_id = state.get("trace_id")
+
+    # Langfuse span
+    span_id = langfuse.start_span(trace_id or "no-trace", "supervisor_node",
+                                   {"question": question, "loop_count": loop_count})
+
     if "revenue" in question or "sql" in question:
         route = "sql"
     elif "chart" in question or "image" in question or "graph" in question:
         route = "vision"
     else:
         route = "search"
-        
-    thoughts.append(f"🕵️‍♂️ Supervisor: Routing query to [{route}].")
+
+    thoughts.append(f"Supervisor: Routing query to [{route}].")
+    langfuse.end_span(span_id, {"route": route})
     return {"route": route, "thought_process": thoughts, "loop_count": loop_count}
 
 
 def search_node(state: GraphState):
-    thoughts = ["🔍 Search Node: Retrieving document chunks..."]
-    
-    # Mocking retrieved documents mapping
+    trace_id = state.get("trace_id")
+    span_id = langfuse.start_span(trace_id or "no-trace", "search_node",
+                                   {"question": state.get("question", "")})
+    thoughts = ["Search Node: Retrieving document chunks..."]
     mocked_docs = [
         {"doc_id": "chunk_01", "text": "Deep Reinforcement learning is a subfield combining Q-learning with deep networks.", "page": 4},
         {"doc_id": "chunk_02", "text": "Supervised learning models predict outputs based on historical labels.", "page": 2}
     ]
-    thoughts.append(f"🔍 Search Node: Retrieved {len(mocked_docs)} chunks from FAISS.")
+    thoughts.append(f"Search Node: Retrieved {len(mocked_docs)} chunks from FAISS.")
+    langfuse.end_span(span_id, {"chunks_retrieved": len(mocked_docs)})
     return {"documents": mocked_docs, "thought_process": thoughts}
 
 
 def sql_node(state: GraphState):
-    thoughts = ["🗄️ SQL Node: Accessing structured database..."]
+    trace_id = state.get("trace_id")
+    span_id = langfuse.start_span(trace_id or "no-trace", "sql_node",
+                                   {"question": state.get("question", "")})
+    thoughts = ["SQL Node: Accessing structured database..."]
     mocked_docs = [{"doc_id": "sql_01", "text": "Database shows standard revenue growth of 12% in Q3.", "page": 1}]
+    langfuse.end_span(span_id, {"chunks_retrieved": len(mocked_docs)})
     return {"documents": mocked_docs, "thought_process": thoughts}
 
 
 def vision_node(state: GraphState):
-    thoughts = ["🖼️ Vision Node: Accessing multimodal pipeline..."]
+    trace_id = state.get("trace_id")
+    span_id = langfuse.start_span(trace_id or "no-trace", "vision_node",
+                                   {"question": state.get("question", "")})
+    thoughts = ["Vision Node: Accessing multimodal pipeline..."]
     mocked_docs = [{"doc_id": "img_01", "text": "Bar chart illustrating error metrics decreasing over training.", "page": 12}]
+    langfuse.end_span(span_id, {"images_retrieved": len(mocked_docs)})
     return {"documents": mocked_docs, "thought_process": thoughts}
 
 
@@ -61,13 +76,16 @@ def vision_node(state: GraphState):
 
 def grade_documents_node(state: GraphState):
     """
-    Evaluates all retrieved documents in state['documents'] for relevance 
-    and filters out irrelevant noise.
+    Evaluates all retrieved documents for relevance and filters out irrelevant noise.
+    Logs relevance scores to Langfuse.
     """
     question = state["question"]
     docs = state.get("documents", [])
-    thoughts = ["🕵️‍♂️ Doc Grader: Commencing relevance grading..."]
-    
+    trace_id = state.get("trace_id")
+    thoughts = ["Doc Grader: Commencing relevance grading..."]
+
+    span_id = langfuse.start_span(trace_id or "no-trace", "grade_documents",
+                                   {"question": question, "num_docs": len(docs)})
     filtered_docs = []
     for doc in docs:
         score = graders.grade_document_relevance(question, doc["text"])
@@ -76,23 +94,33 @@ def grade_documents_node(state: GraphState):
             thoughts.append(f"  -> Match Found: Document [{doc['doc_id']}] is RELEVANT.")
         else:
             thoughts.append(f"  -> Filtered Out: Document [{doc['doc_id']}] is IRRELEVANT.")
-            
-    thoughts.append(f"🕵️‍♂️ Doc Grader: Completed. {len(filtered_docs)}/{len(docs)} documents remain.")
+
+    relevance_ratio = len(filtered_docs) / max(len(docs), 1)
+    langfuse.log_score(trace_id or "no-trace", "document_relevance_ratio",
+                       round(relevance_ratio, 2), f"{len(filtered_docs)}/{len(docs)} relevant")
+    langfuse.end_span(span_id, {"filtered_count": len(filtered_docs), "total_count": len(docs)})
+
+    thoughts.append(f"Doc Grader: Completed. {len(filtered_docs)}/{len(docs)} documents remain.")
     return {"filtered_documents": filtered_docs, "thought_process": thoughts}
 
 
 def generate_answer_node(state: GraphState):
-    """Generates response based on filtered relevant documents."""
+    """Generates response based on filtered relevant documents. Logs to Langfuse."""
     filtered_docs = state.get("filtered_documents", [])
-    thoughts = ["🧩 Generator: Synthesizing final answer based on relevant documents..."]
-    
+    trace_id = state.get("trace_id")
+    thoughts = ["Generator: Synthesizing final answer based on relevant documents..."]
+
+    span_id = langfuse.start_span(trace_id or "no-trace", "generate_answer",
+                                   {"num_docs": len(filtered_docs)})
     if not filtered_docs:
         response = "No relevant context was found to safely answer the question."
     else:
         context_str = " ".join([d["text"] for d in filtered_docs])
-        # Simulated generator synthesis
         response = f"Based on document records: {context_str}"
-        
+
+    langfuse.log_llm_call(trace_id or "no-trace", "generate_answer",
+                           "heuristic", state.get("question", ""), response, 0)
+    langfuse.end_span(span_id, {"response_length": len(response)})
     return {"response": response, "thought_process": thoughts}
 
 
@@ -145,6 +173,11 @@ def route_retrieval(state: GraphState) -> str:
 def route_after_grading(state: GraphState) -> str:
     """Decides if we proceed to answer generation or rewrite the query."""
     filtered = state.get("filtered_documents", [])
+    loop_count = state.get("loop_count", 0)
+    
+    # Guard: if loop limit reached, force generation to avoid infinite loop
+    if not filtered and loop_count >= 3:
+        return "generate"
     if not filtered:
         return "rewrite"
     return "generate"
