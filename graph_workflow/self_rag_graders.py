@@ -1,3 +1,9 @@
+# ============================================================
+# OmniBrain — Week 3
+# Member 1: Ravi
+# Task: Self-RAG Logic (Grading Models)
+# ============================================================
+
 from typing import Literal
 from pydantic import BaseModel, Field
 from langchain_core.prompts import ChatPromptTemplate
