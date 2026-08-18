@@ -14,6 +14,7 @@ from app.services.retrieval import RetrieverInterface
 from app.services.retrieval_evaluator import RetrievalEvaluatorInterface
 from app.services.answer_generator import AnswerGeneratorInterface
 from app.services.answer_evaluator import AnswerEvaluatorInterface
+from app.utils.tracing import trace_span
 
 logger = logging.getLogger(__name__)
 
@@ -99,26 +100,32 @@ class SelfRAGAgent:
                 current_query = query
             else:
                 # Use history for context
-                current_query = await self.query_rewriter.rewrite(
-                    state.current_query,
-                    history=state.query_history
-                )
+                async with trace_span("query_rewrite", iteration=iteration + 1, conversation_id=conversation_id):
+                    current_query = await self.query_rewriter.rewrite(
+                        state.current_query,
+                        history=state.query_history,
+                    )
             
             state.current_query = current_query
             
             # 2. Document Retrieval
-            docs = await self.retriever.retrieve(
-                current_query,
-                top_k=5,
-                filter=document_filter,
-            )
+            async with trace_span("document_retrieval", iteration=iteration + 1, query=current_query[:200]):
+                docs = await self.retriever.retrieve(
+                    current_query,
+                    top_k=5,
+                    filter=document_filter,
+                )
+
+            # attach some quick metadata to trace via local var (logged by tracer)
+            num_docs = len(docs) if docs is not None else 0
             
             # 3. Retrieval Evaluation
-            retrieval_eval = await self.retrieval_evaluator.evaluate(
-                current_query,
-                docs,
-                threshold=self.retrieval_threshold,
-            )
+            async with trace_span("retrieval_evaluation", iteration=iteration + 1, num_docs=num_docs):
+                retrieval_eval = await self.retrieval_evaluator.evaluate(
+                    current_query,
+                    docs,
+                    threshold=self.retrieval_threshold,
+                )
             
             # If documents are not relevant, rewrite query and retry
             if not retrieval_eval.relevant:
@@ -134,19 +141,21 @@ class SelfRAGAgent:
                 continue
             
             # 4. Answer Generation
-            answer = await self.answer_generator.generate(
-                current_query,
-                docs,
-                max_length=500,  # Configurable
-            )
+            async with trace_span("answer_generation", iteration=iteration + 1, num_docs=num_docs):
+                answer = await self.answer_generator.generate(
+                    current_query,
+                    docs,
+                    max_length=500,  # Configurable
+                )
             
             # 5. Answer Evaluation
-            answer_eval = await self.answer_evaluator.evaluate(
-                current_query,
-                docs,
-                answer,
-                threshold=self.confidence_threshold,
-            )
+            async with trace_span("answer_evaluation", iteration=iteration + 1):
+                answer_eval = await self.answer_evaluator.evaluate(
+                    current_query,
+                    docs,
+                    answer,
+                    threshold=self.confidence_threshold,
+                )
             
             # Record iteration
             state.add_iteration(
