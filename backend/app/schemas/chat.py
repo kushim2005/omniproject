@@ -16,3 +16,7 @@ class ChatResponse(BaseModel):
 
     answer: str
     conversation_id: UUID
+    confidence: Optional[float] = None
+    iterations: Optional[int] = None
+    citations: Optional[List[dict]] = None
+    trace_id: Optional[str] = None

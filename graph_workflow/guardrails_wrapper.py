@@ -38,15 +38,15 @@ class GuardrailsWrapper:
         ]
 
         self.harmful_patterns = [
-            r"how to (make|build|create|synthesize) (a bomb|explosives|weapons|drugs|malware|virus)",
-            r"how to (hack|crack|bypass) (a|the|any) (system|account|password|security)",
+            r"how to (make|build|create|synthesize|develop).*(bomb|weapon|explosive|drug|malware|virus)",
+            r"how to (hack|crack|bypass) (a|the|any)?\s*(system|account|password|security)",
             r"how to (hurt|harm|kill|attack|threaten) (someone|a person|people)",
             r"illegal (activities|methods|ways|instructions)",
             r"generate (fake|fraudulent|forged) (data|documents|records|certificates)"
         ]
 
         self.off_topic_patterns = [
-            r"^(write|tell|give|create|make) me (a poem|a joke|a story|a song)",
+            r"^(write|tell|give|create|make)\s+.*(poem|joke|story|song|recipe)",
             r"^(what is the|how is the) weather",
             r"^play (a game|chess|tic-tac-toe)",
             r"^(what is your name|who are you|who made you|what are you)\??"

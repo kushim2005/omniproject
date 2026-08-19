@@ -84,7 +84,17 @@ async def chat(request: ChatRequest):
                 conversation_id=conversation_id,
             )
 
+        citations = []
+        if "documents" in result:
+            citations = result.get("documents", [])
+        elif "filtered_documents" in result:
+            citations = result.get("filtered_documents", [])
+
         return ChatResponse(
             answer=output_result,
             conversation_id=conversation_id,
+            confidence=result.get("confidence"),
+            iterations=result.get("iterations"),
+            citations=citations,
+            trace_id=str(conversation_id),
         )
