@@ -1,177 +1,103 @@
 # OmniBrain — Agentic Multi-Modal RAG Orchestrator
 
-> An intelligent, self-correcting multi-agent RAG system that ingests PDF documents, extracts text and visual content, and answers queries using a LangGraph-powered orchestration pipeline with NeMo Guardrails safety controls.
+> An intelligent, self-correcting multi-agent RAG system that ingests PDF documents, extracts text and visual content, and answers queries using a LangGraph-powered orchestration pipeline with NeMo Guardrails safety controls and Langfuse observability.
 
 ---
 
-## Team Members
+## 👥 Team Members & Weekly Responsibilities
 
-| Member | Name | Role |
-|---|---|---|
-| Member 1 | Kushi | LangGraph State Machine / Self-RAG Logic |
-| Member 2 | Chaitanya | Supervisor Agent & Routing / Self-Correction Loop |
-| Member 3 | Ranjith | Subagents / NeMo Guardrails |
-| Member 4 | Ravi | FastAPI Backend / Streamlit Chat UI |
-| Member 5 | Vasu Sree | Integration & Testing / Query Rewrite Agent |
+| Member | Name | Week 1 Role | Week 2 Role | Week 3 Role | Week 4 Role |
+|---|---|---|---|---|---|
+| **Member 1** | **Vasu Sree** | Integration & Testing | Integration Testing & Visualization | Query Rewrite Agent | Langfuse Observability Integration |
+| **Member 2** | **Chaitanya** | Image Extraction & Vision | Supervisor Agent & Routing | Self-Correction Loop | RAG Pipeline Step Tracing |
+| **Member 3** | **Ranjith** | Text Embeddings & FAISS | Search & Vision Subagents | NeMo Guardrails | Citation & Source Tracing Backend |
+| **Member 4** | **Ravi** | FastAPI Backend | Streamlit Chat UI & Docker | Self-RAG Graders | Citation UI / PDF Page Viewer |
+| **Member 5** | **Kushi** | PDF Parsing & Text Extraction | LangGraph State Machine | Integration Test Suite | UI Polish + Testing & Integration |
 
 ---
 
-## Week 1 — Multi-Modal Ingestion Pipeline
+## 🗓️ Weekly Milestones & Deliverables
 
-### Objective
-Build a system capable of uploading PDF documents, extracting text and images, generating embeddings, storing them in a vector database, and exposing FastAPI endpoints for document upload and querying.
+### Week 1 — Multi-Modal Ingestion Pipeline
+**Objective**: Build the foundation for PDF document ingestion, text/image extraction, vector embeddings generation, FAISS indexing, and RESTful API endpoints.
 
-### Member Contributions
 | Member | Task | Status |
 |---|---|---|
-| Member 1 (Kushi) | PDF Parsing & Text Extraction | ✅ Done |
+| Member 1 (Kushi) | PDF Parsing & Text Extraction (PyMuPDF) | ✅ Done |
 | Member 2 (Chaitanya) | Image Extraction & Vision Pipeline | ✅ Done |
-| Member 3 (Ranjith) | Text Embeddings & FAISS Vector DB | ✅ Done |
-| Member 4 (Ravi) | FastAPI Backend | ✅ Done |
-| Member 5 (Vasu Sree) | Integration & Testing | ✅ Done |
-
-### Week 1 Progress
-- ✅ Project Setup
-- ✅ PDF Parsing (PyMuPDF)
-- ✅ Image Extraction
-- ✅ Text Chunking (500-char chunks)
-- ✅ Embeddings (`all-MiniLM-L6-v2`)
-- ✅ FAISS IndexFlatL2 Vector Database
-- ✅ FastAPI Endpoints (`/upload`, `/upload/status`, `/query`)
-- ✅ Docker & Docker Compose Setup
+| Member 3 (Ranjith) | Text Embeddings (`all-MiniLM-L6-v2`) & FAISS Vector DB | ✅ Done |
+| Member 4 (Ravi) | FastAPI Backend Foundation (`/upload`, `/health`, `/documents`) | ✅ Done |
+| Member 5 (Vasu Sree) | Ingestion Pipeline Integration & Unit Testing | ✅ Done |
 
 ---
 
-## Week 2 — Agentic Orchestration & Streamlit UI
+### Week 2 — Agentic Orchestration & Streamlit UI
+**Objective**: Wrap the retrieval pipeline in a LangGraph state machine, implement supervisor routing across specialized subagents, and build an interactive Streamlit UI.
 
-### Objective
-Wrap the ingestion pipeline in a LangGraph state machine, implement supervisor-based routing to specialized subagents, build a Streamlit Chat UI, and visualize the multi-agent architecture end-to-end.
-
-### Member Contributions
 | Member | Task | Status |
 |---|---|---|
-| Member 1 (Kushi) | LangGraph State Machine | ✅ Done |
-| Member 2 (Chaitanya) | Supervisor Agent & Routing Logic | ✅ Done |
-| Member 3 (Ranjith) | Search & Vision Subagents | ✅ Done |
-| Member 4 (Ravi) | Streamlit Chat UI + Docker Integration | ✅ Done |
-| Member 5 (Vasu Sree) | Integration Testing & Process Visualization | ✅ Done |
-
-### Week 2 Progress
-- ✅ LangGraph State Machine with `AgentState` TypedDict
-- ✅ Supervisor Agent with conditional routing (Search / Vision / SQL)
-- ✅ Search Subagent (FAISS semantic retrieval)
-- ✅ Vision Subagent (Image metadata retrieval)
-- ✅ Streamlit Chat UI with PDF upload polling and thought-process visualization
-- ✅ Automated API integration tests (Jupyter Notebook)
-- ✅ Mermaid architecture diagram
-
-### System Architecture (Week 2)
-```mermaid
-graph TD
-    UI[Streamlit Chat UI] -->|Query| API[FastAPI]
-    API -->|Invokes| SUP[LangGraph Supervisor]
-    SUP -->|Route Text| SA[Search Subagent]
-    SUP -->|Route Image| VA[Vision Subagent]
-    SA <--> Q[FAISS Vector DB]
-    VA <--> Q
-    SA --> SUP
-    VA --> SUP
-    SUP -->|Final Answer| API
-    API --> UI
-```
+| Member 1 (Kushi) | LangGraph State Machine & `GraphState` TypedDict | ✅ Done |
+| Member 2 (Chaitanya) | Supervisor Agent & Query Intent Routing Logic | ✅ Done |
+| Member 3 (Ranjith) | Search & Vision Subagents (Vector retrieval & Image metadata) | ✅ Done |
+| Member 4 (Ravi) | Streamlit Chat UI & Docker Compose integration | ✅ Done |
+| Member 5 (Vasu Sree) | End-to-End Workflow Integration & Process Visualization | ✅ Done |
 
 ---
 
-## Week 3 — Self-RAG, Guardrails & Self-Correction
+### Week 3 — Self-RAG, Guardrails & Self-Correction
+**Objective**: Implement iterative Self-RAG grading loops, query rewriting on low relevance, LLM fact-grounded self-correction, and NeMo Guardrails safety barriers.
 
-### Objective
-Implement the Self-RAG validation loop, a query rewriting agent, a self-correction mechanism, NeMo Guardrails for safety, and a full integration test suite covering all components.
-
-### Member Contributions
 | Member | Task | Status |
 |---|---|---|
-| Member 1 (Ravi) | Self-RAG Logic (Document Grading, Hallucination Check, Answer Utility) | ✅ Done |
-| Member 2 (Vasu Sree) | Query Rewrite Agent | ✅ Done |
-| Member 3 (Chaitanya) | Self-Correction Loop Integration | ✅ Done |
-| Member 4 (Ranjith) | NeMo Guardrails (Input/Output Safety Rails) | ✅ Done |
-| Member 5 (Kushi) | Integration Test Suite (25/25 passing) | ✅ Done |
-
-### Week 3 Progress
-- ✅ Self-RAG Graders (`GradeDocuments`, `GradeHallucination`, `GradeAnswer`)
-- ✅ Query Rewrite Agent (LLM + heuristic fallback)
-- ✅ Self-Correction Loop (LLM-backed fact grounding)
-- ✅ NeMo Guardrails (`guardrails/config.yml` + `guardrails/main.co`)
-  - Jailbreak detection and blocking
-  - Harmful content detection
-  - Off-topic query filtering
-  - Unsafe output flagging
-- ✅ Guardrails integrated into FastAPI `/chat` endpoint
-- ✅ 25/25 integration tests passing in 0.083s
-
-### Self-RAG Pipeline (Week 3)
-```mermaid
-graph TD
-    Start[User Query] --> Guard[NeMo Guardrails Input Rail]
-    Guard -->|Blocked| Refuse[Return Safety Message]
-    Guard -->|Safe| Sup[Supervisor Node]
-    Sup --> Retrieve[Search / Vision / SQL Agent]
-    Retrieve --> Grade{Grade Documents}
-    Grade -->|Relevant Docs Found| Generate[Generate Answer]
-    Grade -->|No Relevant Docs| Rewrite[Query Rewriter - M2]
-    Rewrite --> Sup
-    Generate --> HalCheck{Hallucination Check}
-    HalCheck -->|Grounded| UtilCheck{Answer Utility Check}
-    HalCheck -->|Hallucinated| Correct[Self-Correction - M3]
-    Correct --> Generate
-    UtilCheck -->|Answers Query| OutputGuard[NeMo Output Rail]
-    UtilCheck -->|Fails| Rewrite
-    OutputGuard -->|Safe| End[Return to User]
-    OutputGuard -->|Flagged| Flag[Return Safety Notice]
-```
+| Member 1 (Ravi) | Self-RAG Graders (Document Relevance, Hallucination, Answer Utility) | ✅ Done |
+| Member 2 (Vasu Sree) | Query Rewrite Agent with heuristic & LLM fallback | ✅ Done |
+| Member 3 (Chaitanya) | Self-Correction Loop for hallucination mitigation | ✅ Done |
+| Member 4 (Ranjith) | NeMo Guardrails (Input Jailbreak/Harmful filtering & Output Rails) | ✅ Done |
+| Member 5 (Kushi) | Full Integration Test Suite (24/24 passing) | ✅ Done |
 
 ---
 
-## Week 4 — Observability, Tracing, Citations & UI Polish
+### Week 4 — Observability, Tracing, Citations & UI Polish
+**Objective**: Integrate end-to-end LLM observability via Langfuse, implement span tracing in the Self-RAG pipeline, build source citation and page tracking in the backend, develop an interactive citation viewer with an inline PDF page renderer, and deliver a polished Streamlit UI with a comprehensive integration test suite.
 
-### Objective
-Integrate end-to-end LLM observability and tracing via Langfuse, build pipeline step tracing throughout the Self-RAG LangGraph state machine, implement citation and source attribution in the backend, develop an interactive citation viewer with an inline PDF page renderer, and deliver a polished Streamlit UI with a comprehensive integration test suite.
-
-### Member Contributions
 | Member | Task | Status |
 |---|---|---|
-| Member 1 (Vasu Sree) | Langfuse Observability Integration (Traces, Spans, Generation & Score Logging) | ✅ Done |
-| Member 2 (Chaitanya) | RAG Pipeline Step Tracing & LangGraph Node Spans | ✅ Done |
-| Member 3 (Ranjith) | Citation & Source Tracing Backend | ✅ Done |
-| Member 4 (Ravi) | Citation UI / Inline PDF Page Viewer (PyMuPDF) | ✅ Done |
+| Member 1 (Vasu Sree) | Langfuse Observability Integration (Traces, Spans, LLM Calls & Scores) | ✅ Done |
+| Member 2 (Chaitanya) | RAG Pipeline Step Tracing & LangGraph Span Propagation | ✅ Done |
+| Member 3 (Ranjith) | Citation / Source Tracing Backend & Document Filtering | ✅ Done |
+| Member 4 (Ravi) | Citation UI / Inline PDF Page Viewer (PyMuPDF rendering) | ✅ Done |
 | Member 5 (Kushi) | UI Polish + Full Integration & Testing Suite (24/24 passing) | ✅ Done |
 
-### Week 4 Progress
-- ✅ **Langfuse Observability Integration (Member 1)**:
-  - Centralized `LangfuseClient` with trace and child span management
-  - LLM generation logging with token tracking and parameter capture
-  - Grader score recording (relevance ratio, groundedness, utility)
-  - `@traced_node` decorator for automatic node wrapping
-  - Graceful fallback to console mode when credentials are absent
-- ✅ **RAG Pipeline Step Tracing (Member 2)**:
-  - Traced execution across all LangGraph nodes (`supervisor`, `search`, `vision`, `sql`, `grade_documents`, `generate_answer`, `query_rewriter`, `self_correct`)
-  - Execution span nesting and latency measurement
-  - Propagation of `trace_id` through the `GraphState` state machine
-- ✅ **Citation & Source Tracing Backend (Member 3)**:
-  - Source chunk mapping with page numbers, document IDs, and similarity scores
-  - Document filtering in `SelfRAGAgent`
-  - Extended chat schema with confidence scores, iterations, and citation payloads
-- ✅ **Citation UI & PDF Page Viewer (Member 4)**:
-  - Interactive PDF page viewer using PyMuPDF (fitz) rendering
-  - Base64 inline page streaming with zoom controls
-  - Citation cards with page badges and relevance indicators
-- ✅ **UI Polish & Comprehensive Integration Testing (Member 5)**:
-  - Polished Cyber-Indigo Streamlit interface with suggested prompts and live backend health indicators
-  - Dual-mode execution engine (FastAPI `/chat` backend with LangGraph local fallback)
-  - Interactive Citation jump buttons (synchronizing the PDF viewer directly to cited pages)
-  - Observability & diagnostics dashboard tab with live trace history
-  - Complete 24-test integration suite covering all 5 members' modules (`tests/test_week4_integration.py` - 24/24 passing in 0.22s)
+#### Week 4 Detailed Highlights:
+- **🔭 Langfuse Observability (Member 1 - Vasu Sree)**:
+  - Centralized `LangfuseClient` with trace and child span management.
+  - LLM generation logging with token counts, prompt capture, and latency measurements.
+  - Grader score recording (`document_relevance_ratio`, `answer_groundedness`, `answer_utility`).
+  - `@traced_node` decorator for automatic node execution wrapping.
+  - Graceful fallback to console logging mode when credentials are not configured.
+- **🔄 RAG Pipeline Tracing (Member 2 - Chaitanya)**:
+  - Traced execution across all LangGraph nodes (`supervisor`, `search`, `vision`, `sql`, `grade_documents`, `generate_answer`, `query_rewriter`, `self_correct`).
+  - Hierarchical span nesting with per-step latency measurement.
+  - Propagation of `trace_id` through the `GraphState` state machine.
+- **📑 Citation & Source Tracing Backend (Member 3 - Ranjith)**:
+  - Source chunk mapping with page numbers, document IDs, and similarity scores.
+  - Document filtering in `SelfRAGAgent`.
+  - Extended chat schema with confidence scores, iterations, and citation payloads.
+- **🖼️ Citation UI & PDF Page Viewer (Member 4 - Ravi)**:
+  - Inline PDF page rendering using PyMuPDF (`fitz`) with base64 streaming.
+  - Navigation controls (Next/Prev, page selector dropdown, and zoom slider).
+  - Citation cards with page badges and relevance indicators.
+- **✨ UI Polish & Testing Suite (Member 5 - Kushi)**:
+  - Modern Cyber-Indigo Streamlit interface with suggested prompt pills and live backend health indicators.
+  - Dual-mode execution engine (FastAPI `/chat` backend with LangGraph local fallback).
+  - Interactive Citation jump buttons (synchronizing the PDF viewer directly to cited pages).
+  - Observability & diagnostics dashboard tab with live trace history.
+  - Complete 24-test integration suite covering all 5 members' modules (`tests/test_week4_integration.py` - 24/24 passing in 0.22s).
 
-### System Architecture (Week 4)
+---
+
+## 🏗️ System Architecture
+
 ```mermaid
 graph TD
     User[User Query] --> GuardIn[NeMo Guardrails: Input Rail]
@@ -209,21 +135,24 @@ graph TD
 
 ---
 
-## Project Structure
+## 📁 Project Structure
 
 ```text
 omniproject/
 ├── backend/                     # FastAPI backend server
 │   └── app/
+│       ├── agents/              # Self-RAG and routing agents
 │       ├── api/
 │       │   ├── chat.py          # Chat endpoint with NeMo Guardrails & tracing
-│       │   ├── documents.py     # Document listing and deletion
-│       │   ├── health.py        # Health-check endpoints
+│       │   ├── documents.py     # Document listing and deletion API
+│       │   ├── health.py        # Health-check endpoint
 │       │   └── upload.py        # PDF document upload API
+│       ├── config/              # App settings & logging configuration
 │       ├── schemas/
 │       │   ├── chat.py          # Chat schemas with citations & confidence
 │       │   ├── document.py      # Document metadata schemas
-│       │   └── upload.py        # Upload response schemas
+│       │   ├── upload.py        # Upload response schemas
+│       │   └── error.py         # Standardized error schemas
 │       ├── services/            # Retrieval, generation & evaluators
 │       └── utils/
 │           └── tracing.py       # Tracing context managers
@@ -253,26 +182,27 @@ omniproject/
 
 ---
 
-## Technologies
+## ⚙️ Technology Stack
 
 | Layer | Technology |
 |---|---|
-| Language | Python 3.11+ |
-| Backend | FastAPI + Uvicorn |
-| Agent Orchestration | LangGraph |
-| Observability & Tracing | Langfuse |
-| LLM Integration | LangChain + OpenAI |
-| PDF Processing | PyMuPDF (fitz) |
-| Embeddings | `sentence-transformers/all-MiniLM-L6-v2` |
-| Vector Database | FAISS (IndexFlatL2) |
-| Safety Guardrails | NeMo Guardrails (NVIDIA) |
-| Frontend | Streamlit |
-| Containerization | Docker + Docker Compose |
+| **Language** | Python 3.11+ |
+| **Backend Framework** | FastAPI + Uvicorn |
+| **Agent Orchestration** | LangGraph + LangChain |
+| **Observability & Tracing** | Langfuse (Cloud / Local Console Fallback) |
+| **LLM Integration** | LangChain + OpenAI |
+| **PDF Processing** | PyMuPDF (`fitz`) |
+| **Embeddings** | `sentence-transformers/all-MiniLM-L6-v2` |
+| **Vector Database** | FAISS (`IndexFlatL2`) |
+| **Safety Guardrails** | NeMo Guardrails (NVIDIA) |
+| **Frontend UI** | Streamlit (Custom Cyber-Indigo Theme) |
+| **Containerization** | Docker + Docker Compose |
 
 ---
 
-## Quick Start
+## 🚀 Quick Start
 
+### 1. Installation
 ```bash
 # Clone the repository
 git clone https://github.com/kushim2005/omniproject.git
@@ -280,25 +210,53 @@ cd omniproject
 
 # Install dependencies
 pip install -r requirements.txt
+```
 
-# Run the backend
+### 2. Run the FastAPI Backend
+```bash
 uvicorn backend.app.main:app --reload --port 8000
+```
 
-# Run the Streamlit UI (in a separate terminal)
+### 3. Run the Streamlit Chat UI
+```bash
 streamlit run ui/app.py
+```
 
-# Or run everything with Docker
+### 4. Or Run with Docker Compose
+```bash
 docker-compose up --build -d
 ```
 
-## Running Integration Tests
+---
 
+## 🧪 Running Integration Tests
+
+### Week 4 Comprehensive Integration Test Suite
 ```bash
-# Run Week 4 Comprehensive Integration Test Suite
 python tests/test_week4_integration.py
-# Expected: Ran 24 tests in ~0.22s — PASSED [OK]
+```
+**Expected Output**:
+```text
+======================================================================
+Test Results Summary:
+   * Total Tests Run : 24
+   * Passed          : 24
+   * Failures        : 0
+   * Errors          : 0
+   * Execution Time  : 0.22s
+   * Status          : [PASSED [OK]]
+======================================================================
+```
 
-# Run Week 3 Integration Tests
+### Week 3 Integration Tests
+```bash
 python tests/test_week3_integration.py
-# Expected: Ran 24 tests in ~0.08s — PASSED [OK]
+```
+**Expected Output**:
+```text
+[INFO] Total tests run : 24
+[INFO] Failures        : 0
+[INFO] Errors          : 0
+[INFO] Time taken      : 0.08s
+[PASS] Week 3 Integration Test Suite PASSED
 ```
