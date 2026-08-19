@@ -133,16 +133,27 @@ def query_rewriter_node(state: GraphState):
     """
     current_query = state["question"]
     loop_count = state.get("loop_count", 0) + 1
+    trace_id = state.get("trace_id") or "no-trace"
+    span_id = langfuse.start_span(
+        trace_id,
+        "query_rewriter",
+        {"question": current_query, "loop_count": loop_count},
+    )
     
-    rewriter = QueryRewriter()
-    new_query = rewriter.rewrite_query(current_query)
-    
-    thoughts = [
-        f"🔄 Query Rewriter [M2]: Loop Count = {loop_count}.",
-        f"🔄 Query Rewriter [M2]: Rewrote query '{current_query}' -> '{new_query}'"
-    ]
-    
-    return {"question": new_query, "loop_count": loop_count, "thought_process": thoughts}
+    try:
+        rewriter = QueryRewriter()
+        new_query = rewriter.rewrite_query(current_query)
+
+        thoughts = [
+            f"🔄 Query Rewriter [M2]: Loop Count = {loop_count}.",
+            f"🔄 Query Rewriter [M2]: Rewrote query '{current_query}' -> '{new_query}'"
+        ]
+
+        langfuse.end_span(span_id, {"rewritten_query": new_query, "loop_count": loop_count})
+        return {"question": new_query, "loop_count": loop_count, "thought_process": thoughts}
+    except Exception as exc:
+        langfuse.end_span(span_id, {"error": str(exc)}, status="error")
+        raise
 
 
 def self_correct_node(state: GraphState):
@@ -153,15 +164,26 @@ def self_correct_node(state: GraphState):
     question = state["question"]
     current_response = state["response"]
     facts = [d["text"] for d in state.get("filtered_documents", [])]
+    trace_id = state.get("trace_id") or "no-trace"
+    span_id = langfuse.start_span(
+        trace_id,
+        "self_correct",
+        {"question": question, "facts_count": len(facts)},
+    )
     
-    corrector = SelfCorrector()
-    corrected_response = corrector.correct_answer(question, facts, current_response)
-    
-    thoughts = [
-        "🛠️ Self-Correction [M3]: Detected hallucination/utility error in response.",
-        f"🛠️ Self-Correction [M3]: Corrected response grounded strictly in document facts."
-    ]
-    return {"response": corrected_response, "thought_process": thoughts}
+    try:
+        corrector = SelfCorrector()
+        corrected_response = corrector.correct_answer(question, facts, current_response)
+
+        thoughts = [
+            "🛠️ Self-Correction [M3]: Detected hallucination/utility error in response.",
+            f"🛠️ Self-Correction [M3]: Corrected response grounded strictly in document facts."
+        ]
+        langfuse.end_span(span_id, {"response_length": len(corrected_response)})
+        return {"response": corrected_response, "thought_process": thoughts}
+    except Exception as exc:
+        langfuse.end_span(span_id, {"error": str(exc)}, status="error")
+        raise
 
 
 # ─── 4. CONDITIONAL ROUTING PATHWAYS (Member 1 - Ravi) ────────
@@ -195,11 +217,23 @@ def route_after_generation(state: GraphState) -> str:
         
     # Check Hallucination
     hallucination_score = graders.grade_hallucination(facts, answer)
+    langfuse.log_score(
+        state.get("trace_id") or "no-trace",
+        "answer_groundedness",
+        1.0 if hallucination_score == "yes" else 0.0,
+        "Self-RAG hallucination evaluation",
+    )
     if hallucination_score == "no": # Answer has hallucinations
         return "correct"
         
     # Check Answer Utility
     utility_score = graders.grade_answer_utility(question, answer)
+    langfuse.log_score(
+        state.get("trace_id") or "no-trace",
+        "answer_utility",
+        1.0 if utility_score == "yes" else 0.0,
+        "Self-RAG answer utility evaluation",
+    )
     if utility_score == "no": # Answer is safe but doesn't answer question
         return "rewrite"
         

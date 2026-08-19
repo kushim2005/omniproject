@@ -20,6 +20,8 @@ class LangfuseClient:
         self.enabled = False
         self.client = None
         self._current_trace = None
+        self._current_trace_id = None
+        self._traces = {}
         self._spans = {}
 
         # Attempt to initialize Langfuse SDK
@@ -59,6 +61,7 @@ class LangfuseClient:
                 session_id=session_id or trace_id,
                 tags=["omnibrain", "week4", "rag-pipeline"]
             )
+            self._traces[trace_id] = self._current_trace
         else:
             print(f"\n[TRACE START] id={trace_id} name='{name}' input={list(input_data.keys())}")
 
@@ -67,8 +70,9 @@ class LangfuseClient:
 
     def end_trace(self, trace_id: str, output_data: Dict[str, Any], status: str = "success"):
         """Finalize a trace with its output and completion status."""
-        if self.enabled and self._current_trace:
-            self._current_trace.update(
+        trace = self._traces.pop(trace_id, None)
+        if self.enabled and trace:
+            trace.update(
                 output=output_data,
                 metadata={"status": status}
             )
@@ -84,9 +88,10 @@ class LangfuseClient:
         """
         span_id = str(uuid.uuid4())
         start_time = time.time()
+        trace = self._traces.get(trace_id)
 
-        if self.enabled and self._current_trace:
-            span = self._current_trace.span(
+        if self.enabled and trace:
+            span = trace.span(
                 id=span_id,
                 name=name,
                 input=input_data,
@@ -123,8 +128,9 @@ class LangfuseClient:
         Log a single LLM generation call as a generation event.
         Enables token cost tracking and quality scoring in Langfuse.
         """
-        if self.enabled and self._current_trace:
-            self._current_trace.generation(
+        trace = self._traces.get(trace_id)
+        if self.enabled and trace:
+            trace.generation(
                 name=f"{node_name}_llm_call",
                 model=model,
                 model_parameters={"temperature": 0},
@@ -147,7 +153,7 @@ class LangfuseClient:
         Attach a numeric quality score to a trace.
         Used by Self-RAG graders to record relevance/hallucination metrics.
         """
-        if self.enabled and self._current_trace:
+        if self.enabled and trace_id in self._traces:
             self.client.score(
                 trace_id=trace_id,
                 name=name,
